@@ -1,13 +1,13 @@
 # Copyright 1999-2013 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: /var/cvsroot/gentoo-x86/sys-cluster/torque/torque-2.5.12.ebuild,v 1.2 2013/01/16 21:05:26 jlec Exp $
+# $Header: /var/cvsroot/gentoo-x86/sys-cluster/torque/torque-2.5.12.ebuild,v 1.6 2013/06/01 19:49:33 jsbronder Exp $
 
 EAPI=4
 
 inherit autotools-utils eutils flag-o-matic linux-info
 
 DESCRIPTION="Resource manager and queuing system based on OpenPBS"
-HOMEPAGE="http://www.adaptivecomputing.com/products/torque.php"
+HOMEPAGE="http://www.adaptivecomputing.com/products/open-source/torque"
 SRC_URI="http://www.adaptivecomputing.com/resources/downloads/${PN}/${P}.tar.gz"
 
 LICENSE="torque-2.5"
@@ -34,7 +34,7 @@ RDEPEND="${DEPEND_COMMON}
 
 DOCS=( Release_Notes )
 
-PATCHES=( "${FILESDIR}"/${P}-tcl8.6.patch )
+PATCHES=( "${FILESDIR}"/tcl8.6.patch )
 
 AUTOTOOLS_IN_SOURCE_BUILD=1
 
@@ -75,10 +75,11 @@ pkg_setup() {
 	fi
 }
 
-#src_prepare() {
-#	append-cflags -DUSE_INTERP_RESULT
-#	autotools-utils_src_prepare
-#}
+src_prepare() {
+	# Unused and causes breakage when switching from glibc to tirpc.
+	# https://github.com/adaptivecomputing/torque/pull/148
+	sed -i '/rpc\/rpc\.h/d' src/lib/Libnet/net_client.c || die
+}
 
 src_configure() {
 	local myeconfargs=( --with-rcp=mom_rcp )
@@ -87,6 +88,7 @@ src_configure() {
 
 	myeconfargs+=(
 		$(use_enable tk gui)
+		$(use_enable tk tcl-qstat)
 		$(use_enable syslog)
 		$(use_enable server)
 		$(use_enable drmaa)
